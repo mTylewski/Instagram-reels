@@ -1,0 +1,1091 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/YOUR_VOICE_ID",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.Caption }}"
+            },
+            {
+              "name": "model_id",
+              "value": "eleven_multilingual_v2"
+            },
+            {
+              "name": "speed",
+              "value": "1.2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1856,
+        240
+      ],
+      "id": "d683bcb4-3ddb-4644-b8b4-e79f1e47d9bc",
+      "name": "Generate Audio",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "YOUR_ELEVENLABS_BEARER_AUTH_ID",
+          "name": "Bearer Auth account"
+        },
+        "httpHeaderAuth": {
+          "id": "YOUR_ELEVENLABS_HEADER_AUTH_ID",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  {\n    \"Caption\": \"As the wheels turn beneath you, feel the rhythm of the road. Each moment on the bike becomes a meditation, a journey not just through space, but into tranquility. Bad Karma\",\n    \"Hashtags\": \"#Mindfulness #Meditation #BikerLife #Freedom #RiderLife #BadKarma\",\n    \"Voice Style\": \"Calm tone, measured pace with 2-second pauses, gentle meditative delivery for 20-second duration\",\n    \"Background Sound\": \"Soft engine hum blending with subtle ambient nature sounds\",\n    \"Status\": \"for production\"\n  }\n]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -608,
+        224
+      ],
+      "id": "f2a36ade-d1b9-4ca9-8c34-70c35bc351f4",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-05-20",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        208
+      ],
+      "id": "9987e3f7-77b3-4920-a427-490aee442125",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GOOGLE_GEMINI_API_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "list",
+          "cachedResultName": "GRAB IDEA HFS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Arkusz1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOCUMENT_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Caption": "={{ $('Expand Narration').item.json.output[0].Caption || '' }}",
+            "Idea": "={{ $('Generate Initial Concept').item.json.output || '' }}",
+            "Status": "={{ $('Expand Narration').item.json.output[0].Status || 'Error' }}",
+            "Voice Style": "={{ $('Expand Narration').item.json.output[0]['Voice Style'] || '' }}",
+            "Timestamp": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+            "Tags": "={{ $json.output[0].Hashtags }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Voice Style",
+              "displayName": "Voice Style",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tags",
+              "displayName": "Tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "84cf9a4a-b2c6-44db-a1bf-fe65c0a676cd",
+      "name": "3. Log New Idea to Sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -416,
+        208
+      ],
+      "typeVersion": 4.5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_OAUTH2_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Generate a single, concise theme for a short motorcycle social media video. The theme must be evocative and focus on a specific, tangible aspect of the motorcycle experience.\n\nChoose ONE of the following categories and create a theme based on it:\n\n1.  **Overcoming Adversity:** (e.g., The mental reset after a tough week, riding through bad weather, pushing past personal limits, finding a way when you're lost).\n2.  **Freedom & Escape:** (e.g., The feeling of leaving the city limits behind, the anonymity of the helmet, choosing a random road and seeing where it leads, escaping digital noise).\n3.  **The Rider-Machine Bond:** (e.g., The ritual of a pre-ride check, trusting your bike in a challenging corner, the feeling of the engine's vibrations, knowing your bike's every sound and quirk).\n4.  **Sensory Immersion:** (e.g., The smell of rain on hot asphalt, the blur of city lights at night, the feeling of changing temperatures as you ride through a forest, the sound of the wind vs. the engine).\n5.  **The Journey & Life's Path:** (e.g., The road as a metaphor for life's journey, lessons learned from a breakdown on the side of the road, the people you meet, finding beauty in a wrong turn).\n\nYour output must be a single, short sentence describing the chosen theme. Do not mention the category name.\n\nExample Output 1: The satisfaction of fixing your own bike when it breaks down far from home.\nExample Output 2: The unique anonymity and freedom you feel once the helmet's visor goes down.\nExample Output 3: Using the intense focus of a technical road to silence everyday worries.",
+        "options": {
+          "systemMessage": "=You are an AI that generates core, foundational ideas for motorcycle content. Your task is to produce a single, descriptive sentence that will serve as a specific theme for a video. Your output must be only the sentence itself."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -1168,
+        32
+      ],
+      "id": "9aa0f208-44e8-4eab-8917-08afdfb42e0f",
+      "name": "Generate Initial Concept"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Take the following motorcycle video concept and expand it into a narration script using your required JSON format. Use the examples below for inspiration on how to format the \"Narration\" field.\n\nThe short video concept is:\n[[\n{{ $('1. Generate Trendy Idea').item.json.output }}\n]]\n\nHave your final expanded \"Narration\" field be in this format: \"(emotion/mood) (riding scene) with (philosophical/mindful message)\".\nExamples for your inspiration: \n- peaceful mountain ride revealing inner silence\n- meditative morning cruise through empty streets\n- mindful journey through nature's symphony\n\nUse the Think tool to review your output.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=The Caption must:\n- Develop the theme into a short, narrative caption of 2-3 sentences.\n- Strictly adhere to a length of 25-35 words to match a 20-second video.\n- Tell a small story or convey a powerful feeling with a clear progression.\n\nCRITICAL: Your entire narrative MUST be built around this specific theme: \"{{ $('Generate Initial Concept').item.json.text }}\"\nAVOID overused cliches like \"moving meditation\", \"rhythm of the road\", \"finding clarity\", \"profound peace\", \"inner silence\". Be original and specific.\n\nCRITICAL INSTRUCTIONS FOR HASHTAGS:\n- Include exactly 12 hashtags in total, ordered by impact and reach\n- Must include:\n  * 2-3 viral/trending hashtags (>1M posts, e.g. #motivation, #lifestyle)\n  * 3-4 niche-specific high-impact tags (100K-1M posts, e.g. #bikerlife, #rideout)\n  * 2-3 motorcycle-community tags (50K-500K posts)\n  * 2 engagement-focused tags (e.g. #viral)\n  * Always end with #MotorcycleLife and #BadKarma\n- Order hashtags from highest reach to lowest\n- Focus on tags that generate highest engagement in motorcycle/lifestyle niche\n- Avoid banned or flagged hashtags that could limit reach\n\nCRITICAL: Your final JSON output must be a complete object. It MUST include ALL of the following fields, mirroring the structure of the example below: \"Caption\", \"Hashtags\", \"Voice Style\", \"Background Sound\", and \"Status\". Do not omit any fields."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -768,
+        32
+      ],
+      "id": "6e383433-1a95-4f77-9c65-c29ffab307f1",
+      "name": "Expand Narration"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "YOUR_PRODUCTION_FOLDER_ID",
+            "mode": "list",
+            "cachedResultName": "2filmy_prod",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_PRODUCTION_FOLDER_ID"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1744,
+        32
+      ],
+      "id": "df27fce8-e566-4d9d-b5d4-556b58a6baec",
+      "name": "Znajdź plik z produkcji",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIALS_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1456,
+        32
+      ],
+      "id": "4c91026a-8bc3-4ec2-ad9c-067a7b094c65",
+      "name": "usuń plik z produkcji",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIALS_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "YOUR_QUEUE_FOLDER_ID",
+            "mode": "list",
+            "cachedResultName": "1filmy_prod",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_QUEUE_FOLDER_ID"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2128,
+        240
+      ],
+      "id": "f7324a28-3d77-489c-9518-96f54e102315",
+      "name": "znajdź kolejny plik w kolejce",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIALS_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = $input.all();\n\nfunction getNumber(filename) {\n    const match = filename.match(/^(\\d+)_/);\n    return match ? parseInt(match[1]) : 999999;\n}\n\nconst sortedFiles = files.sort((a, b) => {\n    const numA = getNumber(a.json.name);\n    const numB = getNumber(b.json.name);\n    return numA - numB;\n});\n\nconst firstFile = sortedFiles[0];\n\nif (!firstFile) {\n    throw new Error('No video files found');\n}\n\nreturn {\n    json: {\n        fileId: firstFile.json.id,\n        fileName: firstFile.json.name,\n        number: getNumber(firstFile.json.name),\n        allFiles: sortedFiles.map(f => f.json.name)\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        464
+      ],
+      "id": "0ec8a2fb-db7b-4185-aea3-2fab800dfb21",
+      "name": "poukładaj pliki"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.fileId }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_PRODUCTION_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "2filmy_prod",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_PRODUCTION_FOLDER_ID"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2128,
+        688
+      ],
+      "id": "cee23b11-bc25-4f98-bc8c-b17b7a5d672a",
+      "name": "przenieś kolejny plik na produkcję",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIALS_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "YOUR_PRODUCTION_FOLDER_ID",
+            "mode": "list",
+            "cachedResultName": "2filmy_prod",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_PRODUCTION_FOLDER_ID"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1840,
+        688
+      ],
+      "id": "dbc823e7-b4a1-40df-867c-fcf641083985",
+      "name": "znajdź plik do produkcji",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIALS_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $now.toFormat('yyyyMMdd_HHmmss') }}_audio.mp3",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_AUDIO_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "Audio do filmu",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_AUDIO_FOLDER_ID"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1856,
+        464
+      ],
+      "id": "b0027e91-1690-45f0-ae72-a5bf46410f73",
+      "name": "załaduj audio",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIALS_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -1520,
+        448
+      ],
+      "id": "0c77c48a-f147-41fb-a650-012a964acdce",
+      "name": "połącz audio i video"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fileId = $input.item.json.id;\n\nreturn {\n  json: {\n    downloadUrl: `https://drive.google.com/uc?id=${fileId}&export=download`,\n    viewUrl: `https://drive.google.com/file/d/${fileId}/view`,\n    fileName: $input.item.json.name,\n    fileUrlForCreatomate: `https://drive.google.com/uc?id=${fileId}&export=download`\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1648,
+        688
+      ],
+      "id": "053889a4-1ce5-49db-9b3b-f208151c27aa",
+      "name": "zmień dane wyjsciowe video"
+    },
+    {
+      "parameters": {
+        "jsCode": "const audioFile = $input.all()[0];\nconst videoFile = $input.all()[1];\n\nreturn {\n  json: {\n    audio_url: audioFile.json.webContentLink,\n    video_url: videoFile.json.fileUrlForCreatomate,\n    audio_name: audioFile.json.name,\n    video_name: videoFile.json.fileName,\n    timestamp: new Date().toISOString()\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1264,
+        448
+      ],
+      "id": "2bc45aae-4eaf-4345-82f9-f2f8677d3ef6",
+      "name": "uporządkuj dane połączonych danych"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.creatomate.com/v1/renders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_CREATOMATE_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"template_id\": \"YOUR_CREATOMATE_TEMPLATE_ID\",\n  \"modifications\": {\n    \"Video-DHM.source\": \"{{ $json.video_url }}\",\n    \"Voiceover-M7S.source\": \"{{ $json.audio_url }}\"\n  },\n  \"frame_rate\": 30,\n  \"video_codec\": \"h264\",\n  \"video_bitrate\": \"4000k\",\n  \"audio_codec\": \"aac\",\n  \"audio_bitrate\": \"128k\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1056,
+        448
+      ],
+      "id": "cba47708-82a3-43b3-891f-7c945584c11c",
+      "name": "generuj video"
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -848,
+        448
+      ],
+      "id": "deeb6a9c-fffb-48fa-9854-7d2169e0c141",
+      "name": "czekaj 2 minuty",
+      "webhookId": "YOUR_WEBHOOK_ID_1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.creatomate.com/v1/renders/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_CREATOMATE_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -640,
+        448
+      ],
+      "id": "6406b130-3b05-4df3-a002-adda91d15408",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "succeeded",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e89b596b-4a94-486b-b71e-f04e6a8705c7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "succeeded"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6eafd5f2-f474-4de7-9081-b1564b5f9553",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9667e117-1745-4487-a753-3a32554daeba",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "(planned|transcribing|waiting|rendering)",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "being processed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -416,
+        448
+      ],
+      "id": "8f31c927-bd0f-4930-83de-c185bade07f3",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3be851d-622f-4543-87cf-33955bd2d2c8",
+              "name": "video_url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "43379d8e-2f06-4963-aead-fc06c7f845bf",
+              "name": "caption",
+              "value": "={{ $('Expand Narration').first().json.output[0].Caption + '\\n\\n' + $('3. Log New Idea to Sheet1').first().json.Tags }}",
+              "type": "string"
+            },
+            {
+              "id": "7c611177-c800-40b1-9aaf-e5746813fec4",
+              "name": "media_type",
+              "value": "REELS",
+              "type": "string"
+            },
+            {
+              "id": "83c0575d-89cb-4d7f-bf20-9604e2e551ed",
+              "name": "share_to_feed",
+              "value": "true",
+              "type": "string"
+            },
+            {
+              "id": "e9a8e413-079c-438e-97ed-1c80943a5e2f",
+              "name": "instagram_account_id",
+              "value": "YOUR_INSTAGRAM_ACCOUNT_ID",
+              "type": "string"
+            },
+            {
+              "id": "b20250de-11dd-448f-ad0b-e727e8c6a316",
+              "name": "title",
+              "value": "={{ $('3. Log New Idea to Sheet1').first().json.Idea }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1264,
+        704
+      ],
+      "id": "7ae43131-8abf-46d3-abad-ff2a508c7d47",
+      "name": "set IG POST"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "YOUR_INSTAGRAM_ACCOUNT_ID",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "media_type",
+                "value": "REELS"
+              },
+              {
+                "name": "video_url",
+                "value": "={{ $json.video_url }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $json.caption }}"
+              },
+              {
+                "name": "share_to_feed",
+                "value": "true"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        704
+      ],
+      "id": "2a68f337-ada7-4ff5-80a0-58c6510b817c",
+      "name": "Facebook Graph API",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "YOUR_FACEBOOK_GRAPH_API_ID",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "YOUR_INSTAGRAM_ACCOUNT_ID",
+        "edge": "media_publish",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "creation_id",
+                "value": "={{ $json.id }}"
+              },
+              {
+                "name": "video_url",
+                "value": "={{ $('set IG POST').item.json.video_url }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $('set IG POST').item.json.caption }}"
+              },
+              {
+                "name": "title",
+                "value": "={{ $('set IG POST').item.json.title }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        704
+      ],
+      "id": "186a51d0-dcc9-4d05-a990-c551f83f746f",
+      "name": "Facebook Graph API1",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "YOUR_FACEBOOK_GRAPH_API_ID",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -848,
+        704
+      ],
+      "id": "3bda0e39-c55f-4ae9-96a5-aa4c3e21a725",
+      "name": "Wait",
+      "webhookId": "YOUR_WEBHOOK_ID_2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2144,
+        32
+      ],
+      "id": "ab8b145e-f7f4-4c02-ab45-59a16a9689de",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "Generate Audio": {
+      "main": [
+        [
+          {
+            "node": "załaduj audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Expand Narration",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Initial Concept",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Expand Narration",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Log New Idea to Sheet1": {
+      "main": [
+        [
+          {
+            "node": "Generate Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Initial Concept": {
+      "main": [
+        [
+          {
+            "node": "Expand Narration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Narration": {
+      "main": [
+        [
+          {
+            "node": "3. Log New Idea to Sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Znajdź plik z produkcji": {
+      "main": [
+        [
+          {
+            "node": "usuń plik z produkcji",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "znajdź kolejny plik w kolejce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "usuń plik z produkcji": {
+      "main": [
+        [
+          {
+            "node": "Generate Initial Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "znajdź kolejny plik w kolejce": {
+      "main": [
+        [
+          {
+            "node": "poukładaj pliki",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "poukładaj pliki": {
+      "main": [
+        [
+          {
+            "node": "przenieś kolejny plik na produkcję",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "przenieś kolejny plik na produkcję": {
+      "main": [
+        [
+          {
+            "node": "znajdź plik do produkcji",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "znajdź plik do produkcji": {
+      "main": [
+        [
+          {
+            "node": "zmień dane wyjsciowe video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "załaduj audio": {
+      "main": [
+        [
+          {
+            "node": "połącz audio i video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "połącz audio i video": {
+      "main": [
+        [
+          {
+            "node": "uporządkuj dane połączonych danych",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "zmień dane wyjsciowe video": {
+      "main": [
+        [
+          {
+            "node": "połącz audio i video",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "uporządkuj dane połączonych danych": {
+      "main": [
+        [
+          {
+            "node": "generuj video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generuj video": {
+      "main": [
+        [
+          {
+            "node": "czekaj 2 minuty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "czekaj 2 minuty": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "set IG POST",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "czekaj 2 minuty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set IG POST": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Graph API": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Graph API1": {
+      "main": [
+        []
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Znajdź plik z produkcji",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_N8N_INSTANCE_ID"
+  }
+}
